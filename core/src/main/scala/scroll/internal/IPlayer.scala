@@ -50,6 +50,11 @@ abstract class IPlayer[T <: AnyRef : ClassTag](val wrapped: T) {
     */
   def <->[R <: AnyRef : ClassTag](role: R): IPlayer[T]
 
+  /**
+    * Provides all roles a player currently has
+    */
+  def getRoles: Seq[AnyRef]
+
   override def equals(o: Any): Boolean
 
   override def hashCode(): Int
