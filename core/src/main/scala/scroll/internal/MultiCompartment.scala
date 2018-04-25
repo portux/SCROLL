@@ -5,6 +5,7 @@ import scroll.internal.support._
 import scroll.internal.util.ReflectiveHelper
 
 import scala.collection.mutable
+import scala.language.dynamics
 import scala.reflect.ClassTag
 
 /**
@@ -35,6 +36,8 @@ trait MultiCompartment extends Compartment {
     }
 
     override def <->[R <: AnyRef : ClassTag](role: R): MultiPlayer[T] = drop(role)
+
+    override def getRoles: Seq[AnyRef] = plays.getRoles(this)
 
     def applyDynamic[E, A](name: String)(args: A*)(implicit dispatchQuery: DispatchQuery = DispatchQuery.empty): Either[SCROLLError, Seq[Either[SCROLLError, E]]] = {
       val core = getCoreFor(wrapped).last

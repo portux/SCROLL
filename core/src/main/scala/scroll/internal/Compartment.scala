@@ -1,9 +1,9 @@
 package scroll.internal
 
 import scroll.internal.errors.SCROLLErrors._
-import scroll.internal.support._
-import UnionTypes.RoleUnionTypes
 import scroll.internal.graph.{CachedScalaRoleGraph, ScalaRoleGraph}
+import scroll.internal.support.UnionTypes.RoleUnionTypes
+import scroll.internal.support._
 import scroll.internal.util.ReflectiveHelper
 
 import scala.annotation.tailrec
@@ -66,7 +66,7 @@ trait Compartment
     this.partOf(other)
     this
   }
-  
+
   /**
     * Merge role graphs to this and set other role graph to this one.
     */
@@ -202,11 +202,41 @@ trait Compartment
     addPlaysRelation(coreTo, role)
   }
 
+  /** Wraps an object playing some role in the current compartment into a player instance to enable access to its roles.
+    *
+    * This is particularly useful if the object plays multiple roles in different compartments and
+    * the scopes where the play relation is defined and actually used differ.
+    *
+    * If an instance which is already lifted is passed it will just be returned.
+    *
+    * @param player the object. It has to play some role in the compartment
+    * @tparam T the type of the object
+    * @return the player
+    */
+  def lift[T <: AnyRef : ClassTag](player: T): Option[Player[T]] = {
+    player match {
+      case p: Player[_] if plays.containsPlayer(p.wrapped) => Some(p)
+      case Player => None
+      case wrapped if plays.containsPlayer(wrapped) => new Player(wrapped)
+      case _ => None
+    }
+
+    if (plays.containsPlayer(player)) Some(new Player[T](player)) else None
+  }
+
+  /** Alias for [[Compartment.lift]]
+    *
+    * @param player the object. It has to play some role in the compartment
+    * @tparam T the type of the object
+    * @return the player
+    */
+  def @:[T <: AnyRef : ClassTag](player: T): Option[Player[T]] = lift(player)
+
   @tailrec
   protected final def getCoreFor(role: AnyRef): Seq[AnyRef] = {
     require(null != role)
     role match {
-      case cur: IPlayer[_] => getCoreFor(cur.wrapped)
+      case cur: IPlayer[_] => getCoreFor(cur.wrapped) // the role graph stores the player as unwrapped objects
       case cur: AnyRef if plays.containsPlayer(cur) =>
         val r = plays.getPredecessors(cur)
         if (r.isEmpty) {
@@ -287,6 +317,8 @@ trait Compartment
 
     override def <->[R <: AnyRef : ClassTag](role: R): Player[T] = drop(role)
 
+    override def getRoles: Seq[AnyRef] = plays.getRoles(this)
+
     /**
       * Transfers a role to another player.
       *
@@ -349,7 +381,9 @@ trait Compartment
 
     override def selectDynamic[E](name: String)(implicit dispatchQuery: DispatchQuery = DispatchQuery.empty): Either[SCROLLError, E] = {
       val core = getCoreFor(wrapped).last
-      dispatchQuery.filter(plays.getRoles(core)).find(ReflectiveHelper.hasMember(_, name)) match {
+      val roles = dispatchQuery.filter(plays.getRoles(core))
+      val member = roles.find(ReflectiveHelper.hasMember(_, name))
+      member match {
         case Some(r) => Right(ReflectiveHelper.propertyOf(r, name))
         case None => Left(RoleNotFound(core.toString, name, Seq.empty))
       }
@@ -374,6 +408,10 @@ trait Compartment
     }
 
     override def hashCode(): Int = wrapped.hashCode()
+  }
+
+  object Player {
+    def unapply[T <: AnyRef : ClassTag](arg: Player[T]): Option[T] = Some(arg.wrapped)
   }
 
 }
