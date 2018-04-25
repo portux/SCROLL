@@ -198,4 +198,7 @@ class ScalaRoleGraph(checkForCycles: Boolean = true) extends RoleGraph {
     }
     returnSeq
   }
+
+  override def toString: String = s"ScalaRoleGraph: ${root.toString}"
+
 }
