@@ -14,6 +14,29 @@ import scala.reflect.ClassTag
   */
 trait MultiCompartment extends Compartment {
 
+  implicit def either2SeqTOrException[T](either: Either[_, Seq[Either[_, T]]]): Seq[T] = either.fold(
+    left => {
+      throw new RuntimeException(left.toString)
+    },
+    right => {
+      var res: Seq[T] = Seq()
+
+      right.foreach { value: Either[_, T] =>
+        res = res :+ value.fold(
+          l => {
+            throw new RuntimeException(l.toString)
+          }, r => {
+            r
+          }
+        )
+      }
+
+      res
+    }
+  )
+
+  implicit def either2SeqTHeadOrException[T](either: Either[_, Seq[Either[_, T]]]): T = either2SeqTOrException(either).head
+
   implicit class MultiPlayer[T <: AnyRef : ClassTag](override val wrapped: T) extends IPlayer[T](wrapped) with Dynamic with SCROLLDispatchable {
 
     override def unary_+ : MultiPlayer[T] = this
