@@ -1,7 +1,8 @@
 package scroll.internal
 
 import scroll.internal.errors.SCROLLErrors._
-import scroll.internal.graph.{CachedScalaRoleGraph, ScalaRoleGraph}
+import scroll.internal.graph.ScalaRoleGraph
+//import scroll.internal.graph.{CachedScalaRoleGraph, ScalaRoleGraph}
 import scroll.internal.support.UnionTypes.RoleUnionTypes
 import scroll.internal.support._
 import scroll.internal.util.ReflectiveHelper
@@ -40,7 +41,7 @@ trait Compartment
     with QueryStrategies
     with RoleUnionTypes {
 
-  protected var plays: ScalaRoleGraph = new CachedScalaRoleGraph()
+  protected var plays: ScalaRoleGraph = new ScalaRoleGraph()
 
   implicit def either2TorException[T](either: Either[_, T]): T = either.fold(
     l => {
@@ -73,9 +74,9 @@ trait Compartment
   def combine(other: Compartment): Compartment = {
     require(null != other)
     plays.addPartAndCombine(other.plays)
-    //println("*******************************************************************************************************Combine0: G1: " + this.plays + " G2: " + other.plays + " O1: " + this + " O2: " + other)
+    //println("*************************************************************Combine0: G1: " + this.plays + " G2: " + other.plays + " O1: " + this + " O2: " + other)
     other.plays = this.plays
-    //println("*******************************************************************************************************Combine1: G1: " + this.plays + " G2: " + other.plays + " O1: " + this + " O2: " + other)
+    //println("*************************************************************Combine1: G1: " + this.plays + " G2: " + other.plays + " O1: " + this + " O2: " + other)
     this
   }
 
