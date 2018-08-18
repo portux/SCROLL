@@ -50,7 +50,9 @@ class EqualityRoleTest extends FeatureSpec with GivenWhenThen with Matchers {
         val someRole = new RoleA()
         val someOtherRole = new RoleB()
         And("some play relationships")
-        val player = (someCore play someRole) play someOtherRole
+        //val player = (someCore play someRole) play someOtherRole
+        val player = someCore play someRole
+        someRole play someOtherRole
 
         When("comparing identity between core and player")
         Then("player and core should have the same identity")
