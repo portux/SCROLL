@@ -53,9 +53,10 @@ trait Compartment
   /**
     * Declaring a is-part-of relation between compartments.
     */
-  def partOf(other: Compartment): Unit = {
+  def addPart(other: Compartment): Unit = {
     require(null != other)
-    plays.merge(other.plays)
+    plays.addPart(other.plays)
+    return
   }
 
   /**
@@ -63,8 +64,8 @@ trait Compartment
     */
   def union(other: Compartment): Compartment = {
     require(null != other)
-    other.partOf(this)
-    this.partOf(other)
+    other.addPart(this)
+    this.addPart(other)
     this
   }
 
@@ -73,7 +74,7 @@ trait Compartment
     */
   def combine(other: Compartment): Compartment = {
     require(null != other)
-    plays.addPartAndCombine(other.plays)
+    plays.addPart(other.plays)
     //println("*************************************************************Combine0: G1: " + this.plays + " G2: " + other.plays + " O1: " + this + " O2: " + other)
     other.plays = this.plays
     //println("*************************************************************Combine1: G1: " + this.plays + " G2: " + other.plays + " O1: " + this + " O2: " + other)

@@ -136,7 +136,7 @@ object BankExample extends App {
       }
     }
 
-    transaction partOf this
+    transaction addPart this
 
     transaction play new TransactionRole execute()
 

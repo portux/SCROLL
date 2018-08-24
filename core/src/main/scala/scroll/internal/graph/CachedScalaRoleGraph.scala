@@ -53,29 +53,33 @@ class CachedScalaRoleGraph(checkForCycles: Boolean = true) extends ScalaRoleGrap
   override def getFacets(player: AnyRef): Seq[Enumeration#Value] =
     facetsCache.getAndPutWithDefault(player, super.getFacets(player))
 
-  override def combine(other: RoleGraph): Unit = {
+  /*override def combine(other: RoleGraph): Unit = {
     require(other.isInstanceOf[CachedScalaRoleGraph], "You can only merge RoleGraphs of the same type!")
     super.combine(other)
     resetAll()
-  }
+  }*/
   
-  override def addPart(other: RoleGraph): Unit = {
+  override def addPart(other: RoleGraph): Boolean = {
     require(other.isInstanceOf[CachedScalaRoleGraph], "You can only merge RoleGraphs of the same type!")
-    super.addPart(other)
-    resetAll()
+    //TODO: if other is empty then return and do not call any functionality
+    if (super.addPart(other)) {
+      resetAll()
+      true
+    }
+    false
   }
   
-  override def addPartAndCombine(other: RoleGraph): Unit = {
+  /*override def addPartAndCombine(other: RoleGraph): Unit = {
     require(other.isInstanceOf[CachedScalaRoleGraph], "You can only merge RoleGraphs of the same type!")
     super.addPartAndCombine(other)
     resetAll()
-  }
+  }*/
   
-  override def merge(other: RoleGraph): Unit = {
+  /*override def merge(other: RoleGraph): Unit = {
     require(other.isInstanceOf[CachedScalaRoleGraph], "You can only merge RoleGraphs of the same type!")
     super.merge(other)
     resetAll()
-  }
+  }*/
 
   override def removeBinding[P <: AnyRef : ClassTag, R <: AnyRef : ClassTag](player: P, role: R): Unit = {
     super.removeBinding(player, role)

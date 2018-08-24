@@ -1,6 +1,6 @@
 package scroll.internal.graph
 
-import com.google.common.graph.{GraphBuilder, Graphs, MutableGraph}
+import com.google.common.graph.{ GraphBuilder, Graphs, MutableGraph }
 
 import scala.reflect.ClassTag
 import collection.JavaConverters._
@@ -14,9 +14,9 @@ import scala.collection.mutable
  */
 class ScalaRoleGraph(checkForCycles: Boolean = true) extends RoleGraph {
 
-  private var root: MutableGraph[Object] = GraphBuilder.directed().build[Object]()
+  private val root: MutableGraph[Object] = GraphBuilder.directed().build[Object]()
 
-  private def checkAndMerge(source: MutableGraph[Object], target: MutableGraph[Object]): Unit =
+  /*private def checkAndMerge(source: MutableGraph[Object], target: MutableGraph[Object]): Unit =
     (source.nodes().size, target.nodes().size) match {
       case (_, t) if t == 0 => //do nothing; source is correct
       case (s, _) if s == 0 =>
@@ -35,9 +35,9 @@ class ScalaRoleGraph(checkForCycles: Boolean = true) extends RoleGraph {
           val _ = root.putEdge(p.source(), p.target())
         })
         checkCycles()
-    }
+    }*/
 
-  override def combine(other: RoleGraph): Unit = {
+  /*override def combine(other: RoleGraph): Unit = {
     require(null != other)
     require(other.isInstanceOf[ScalaRoleGraph], "You can only merge RoleGraphs of the same type!")
 
@@ -69,9 +69,9 @@ class ScalaRoleGraph(checkForCycles: Boolean = true) extends RoleGraph {
       other.asInstanceOf[ScalaRoleGraph].root = root
     }
     checkCycles()
-  }
+  }*/
 
-  override def addPart(other: RoleGraph): Unit = {
+  /*override def addPart(other: RoleGraph): Unit = {
     require(null != other)
     require(other.isInstanceOf[ScalaRoleGraph], "You can only merge RoleGraphs of the same type!")
 
@@ -93,28 +93,29 @@ class ScalaRoleGraph(checkForCycles: Boolean = true) extends RoleGraph {
       val _ = root.putEdge(p.source(), p.target())
     })
     checkCycles()
-  }
+  }*/
 
-  override def addPartAndCombine(other: RoleGraph): Unit = {
+  override def addPart(other: RoleGraph): Boolean = {
     require(null != other)
     require(other.isInstanceOf[ScalaRoleGraph], "You can only merge RoleGraphs of the same type!")
 
     //TODO: this is normally the only correct addPart implementation
     val target = other.asInstanceOf[ScalaRoleGraph].root
 
-    if (target.nodes().isEmpty) return
+    if (target.nodes().isEmpty) return false
 
     target.edges().forEach(p => {
       val _ = root.putEdge(p.source(), p.target())
     })
     checkCycles()
+    return true
   }
 
-  override def merge(other: RoleGraph): Unit = {
+  /*override def merge(other: RoleGraph): Unit = {
     require(null != other)
     require(other.isInstanceOf[ScalaRoleGraph], "You can only merge RoleGraphs of the same type!")
     checkAndMerge(root, other.asInstanceOf[ScalaRoleGraph].root)
-  }
+  }*/
 
   override def detach(other: RoleGraph): Unit = {
     require(null != other)
@@ -194,16 +195,21 @@ class ScalaRoleGraph(checkForCycles: Boolean = true) extends RoleGraph {
   override def allPlayers: Seq[AnyRef] = root.nodes().asScala.toSeq
 
   override def getPredecessors(player: AnyRef): Seq[AnyRef] = {
-    val returnSeq = new mutable.ListBuffer[Object]
-    val processing = new mutable.Queue[Object]
-    root.predecessors(player.asInstanceOf[Object]).forEach(n => if (!n.isInstanceOf[Enumeration#Value]) processing.enqueue(n))
-    while (processing.nonEmpty) {
-      val next = processing.dequeue()
-      if (!returnSeq.contains(next))
-        returnSeq += next
-      root.predecessors(next).forEach(n => if (!n.isInstanceOf[Enumeration#Value]) processing.enqueue(n))
+    require(null != player)
+    if (containsPlayer(player)) {
+      val returnSeq = new mutable.ListBuffer[Object]
+      val processing = new mutable.Queue[Object]
+      root.predecessors(player.asInstanceOf[Object]).forEach(n => if (!n.isInstanceOf[Enumeration#Value]) processing.enqueue(n))
+      while (processing.nonEmpty) {
+        val next = processing.dequeue()
+        if (!returnSeq.contains(next))
+          returnSeq += next
+        root.predecessors(next).forEach(n => if (!n.isInstanceOf[Enumeration#Value]) processing.enqueue(n))
+      }
+      returnSeq
+    } else {
+      Seq.empty
     }
-    returnSeq
   }
 
   override def toString: String = s"ScalaRoleGraph: ${root.toString}"

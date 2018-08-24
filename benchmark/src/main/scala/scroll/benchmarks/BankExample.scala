@@ -133,7 +133,7 @@ class BankExample {
         val mt = new MoneyTransfer()
         transaction play mt
         moneyTransfers.append(mt)
-        transaction partOf this
+        transaction addPart this
       }
     }
     this
