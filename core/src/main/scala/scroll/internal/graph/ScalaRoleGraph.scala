@@ -82,6 +82,7 @@ class ScalaRoleGraph(checkForCycles: Boolean = true) extends RoleGraph {
     if (target.nodes().isEmpty) return
 
     if (source.nodes().isEmpty) {
+      //TODO: if instances should be different copy everything from target to source
       //take target because source is empty
       root = target
       checkCycles()
@@ -98,6 +99,7 @@ class ScalaRoleGraph(checkForCycles: Boolean = true) extends RoleGraph {
     require(null != other)
     require(other.isInstanceOf[ScalaRoleGraph], "You can only merge RoleGraphs of the same type!")
 
+    //TODO: this is normally the only correct addPart implementation
     val target = other.asInstanceOf[ScalaRoleGraph].root
 
     if (target.nodes().isEmpty) return
@@ -116,9 +118,14 @@ class ScalaRoleGraph(checkForCycles: Boolean = true) extends RoleGraph {
 
   override def detach(other: RoleGraph): Unit = {
     require(null != other)
-    other.allPlayers.foreach(pl =>
+    //TODO: does this really make sense or should their be a better version
+    val target = other.asInstanceOf[ScalaRoleGraph].root
+    target.edges().forEach(p => {
+      val _ = removeBinding(p.source(), p.target())
+    })
+    /*other.allPlayers.foreach(pl =>
       other.getRoles(pl).foreach(rl =>
-        removeBinding(pl, rl)))
+        removeBinding(pl, rl)))*/
   }
 
   private def checkCycles(): Unit = {
